@@ -1,20 +1,33 @@
 import { useEffect, useState } from "react"
 import todoInfo from "../models/todoItem"
 
-const useFetch=(url: string)=>{
-    const [data,setData] = useState<todoInfo[]>([])
+const useFetch = (url: string) => {
+   const [data, setData] = useState<todoInfo[]>([])
+   const [ispending, setPending] = useState(true)
+   const [error, setError] = useState("")
+   useEffect(() => {
+      const abortCont = new AbortController();
+      fetch(url)
+         .then(res => res.json())
+         .then(res => {
+            if (Array.isArray(res)) {
+               setData(res);
+            } else {
+               setData([res]);
+            }
+            setPending(false)
+            setError("")
+         })
+         .catch(error => {
+            setError(error.message)
+            setPending(false)
+         })
+      return () => abortCont.abort()
+   }, [url])
 
-    useEffect(()=>{
-        fetch(url)
-     .then(res=>res.json())
-     .then(data=>{
-        setData(data)
-     })
-    },[url])
-
-    return [data,setData] as [todoInfo[],React.Dispatch<React.SetStateAction<todoInfo[]>>]
-    // return [data,setData]!
-    // return data
+   return { data, ispending, error } as const
+   // return [data,setData]!
+   // return data
 }
 
 export default useFetch;
